@@ -297,7 +297,8 @@ class HGTLayer2(nn.Module):
                 alpha = torch.sigmoid(self.skip[n_id])
                 t = G.dstnodes[ntype].data["t"].view(-1, self.out_dim)
                 trans_out = self.drop(self.a_linears[n_id](t))
-                trans_out = trans_out * alpha + h[ntype][1] * (1 - alpha)
+                h_dst = h[ntype][1]
+                trans_out = trans_out * alpha + h_dst * (1 - alpha)
                 if self.use_norm:
                     new_h[ntype] = self.norms[n_id](trans_out)
                 else:

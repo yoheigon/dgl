@@ -138,12 +138,13 @@ def train2(model, G):
     best_test_acc = torch.tensor(0)
     train_step = torch.tensor(0)
     n_layers = 2
-    fanout = 1024
+    fanout = 16
     batch_size = 1024
+    print(f"setting fanout as {fanout}")
     sampler = dgl.dataloading.MultiLayerNeighborSampler(
             [fanout] * n_layers
         )
-    sampler = HGTSampler(fanout, n_layers)
+    #sampler = HGTSampler(fanout, n_layers)
     #train_idx = train_idx.to(device)
     #test_idx = test_idx.to(device)
     loader = dgl.dataloading.DataLoader(
@@ -152,35 +153,35 @@ def train2(model, G):
             sampler,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=4,
+            num_workers=0,
             device=device,
             #use_uva=True
         )
     sampler2 = dgl.dataloading.MultiLayerNeighborSampler(
             [fanout] * n_layers
         )
-    sampler2 = HGTSampler(fanout, n_layers)
+    #sampler2 = HGTSampler(fanout, n_layers)
     loader2 = dgl.dataloading.DataLoader(
             G,
             {"paper": test_idx.to(device)},
             sampler,
             batch_size=batch_size*100,
             shuffle=True,
-            num_workers=4,
+            num_workers=0,
             device=device,
             #use_uva=True
         )
     sampler3 = dgl.dataloading.MultiLayerNeighborSampler(
             [fanout] * n_layers
         )
-    sampler3 = HGTSampler(fanout, n_layers)
+    #sampler3 = HGTSampler(fanout, n_layers)
     loader3 = dgl.dataloading.DataLoader(
             G,
             {"paper": val_idx.to(device)},
             sampler,
             batch_size=batch_size*100,
             shuffle=True,
-            num_workers=4,
+            num_workers=0,
             device=device,
             #use_uva=True
         )
@@ -241,8 +242,10 @@ def train2(model, G):
             
             
 
-device = torch.device("cpu")
+#device = torch.device("cpu")
+device = torch.device("cuda:0")
 device2 = torch.device("cuda:0")
+
 G = dgl.heterograph(
     {
         ("paper", "written-by", "author"): data["PvsA"].nonzero(),
@@ -305,6 +308,7 @@ optimizer = torch.optim.AdamW(model.parameters())
 scheduler = torch.optim.lr_scheduler.OneCycleLR(
     optimizer, total_steps=args.n_epoch, max_lr=args.max_lr
 )
+print("----------------")
 print("Minibatch Training with HGT")
 train2(model, G)
 
@@ -324,6 +328,7 @@ optimizer = torch.optim.AdamW(model.parameters())
 scheduler = torch.optim.lr_scheduler.OneCycleLR(
     optimizer, total_steps=args.n_epoch, max_lr=args.max_lr
 )
+print("----------------")
 print("Fullbatch Training with HGT")
 train(model, G)
 
@@ -341,6 +346,7 @@ scheduler = torch.optim.lr_scheduler.OneCycleLR(
     optimizer, total_steps=args.n_epoch, max_lr=args.max_lr
 )
 #print("Training RGCN with #param: %d" % (get_n_params(model)))
+print("----------------")
 print("Fullbatch Training with RGCN")
 train(model, G)
 
@@ -359,5 +365,6 @@ optimizer = torch.optim.AdamW(model.parameters())
 scheduler = torch.optim.lr_scheduler.OneCycleLR(
     optimizer, total_steps=args.n_epoch, max_lr=args.max_lr
 )
+print("----------------")
 print("Fullbatch Training with MLP")
 train(model, G)
